@@ -11,6 +11,7 @@ import io.micronaut.scheduling.TaskExecutors
 import io.micronaut.scheduling.annotation.ExecuteOn
 import io.micronaut.serde.annotation.Serdeable
 import jakarta.inject.Inject
+import okhttp3.Credentials
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.IOException
@@ -93,14 +94,19 @@ class DemoController(
         // Configura o endereço e a porta do proxy
         val proxyAddress = InetSocketAddress("127.0.0.1", 3128)
 
-        //23:59:11.985 [io-executor-thread-1] ERROR i.m.http.server.RouteExecutor - Unexpected error occurred: Failed to connect to /127.0.0.1:1111
-
         // Cria uma instância de Proxy
         val proxy = Proxy(Proxy.Type.HTTP, proxyAddress)
 
         // Cria uma instância do cliente OkHttp
         val client = OkHttpClient.Builder()
             .proxy(proxy)
+            // Configura autenticação para o proxy com credenciais de acesso
+            .proxyAuthenticator { _, response ->
+                val credential = Credentials.basic("username", "pass123")
+                response.request.newBuilder()
+                    .header("Proxy-Authorization", credential)
+                    .build()
+            }
             .build()
 
         // Cria uma requisição GET
